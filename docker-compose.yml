@@ -3,6 +3,7 @@ version: '2.4'
 services:
   server1:
     image: server
+    hostname: server1
     ports:
       - "3031:3030"
     mem_limit: 50000000
@@ -11,6 +12,7 @@ services:
 
   server2:
     image: server
+    hostname: server2
     ports:
       - "3032:3030"
     mem_limit: 50000000
@@ -19,6 +21,7 @@ services:
   
   server3:
     image: server
+    hostname: server3
     ports:
       - "3033:3030"
     mem_limit: 50000000
