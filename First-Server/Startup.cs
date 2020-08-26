@@ -17,7 +17,23 @@ namespace First_Server
         public string[] how = {"влажно", "вздыхая", "задумчиво"};
         public string[] does = {"готовит", "прогает", "говорит"};
         public string[] what = {"орех", "котлетка", "кот"};
+        public List<string> urlsList;
+        IRequest request;
+        public Startup(){
+            request = new SyncRequest();
+            urlsList = new List<string>();
 
+            string line = Environment.GetEnvironmentVariable("COMPOSE_URLS");
+            string[] enviromentUrls = line.Split(':');
+
+            for (int i = 0; i < enviromentUrls.Length; i++){
+                urlsList.Add(enviromentUrls[i]);
+            }
+
+            foreach (string str in urlsList){
+                Console.WriteLine("{0}", str);
+            }
+        }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env){
             if (env.IsDevelopment()){
                 app.UseDeveloperExceptionPage();
@@ -67,28 +83,32 @@ namespace First_Server
                     context.Response.ContentType = "text/html; charset=utf-8";
                     context.Response.Headers.Add("InCamp-Student", Environment.GetEnvironmentVariable("HOSTNAME"));
 
-                    IRequest request;
-                    if (FLAG){
-                        request = new AsyncRequest();
-                    } else {
-                        request = new SyncRequest();
-                    }   
+                    List<string> urls = new List<string>();
+
+                    for (int i = 0; i < 4; i++){
+                        urls.Add(Data.RandomWord(urlsList));
+                    }  
                     DateTime start = DateTime.Now;
-                    List<(string, string)> words = request.Request();
+                    List<(string, string)> words = request.Request(urls);
                     TimeSpan timeItTook = DateTime.Now - start;
                                      
                     string requestLine = "", requestWords = "";
                     for (int i = 0; i < 4; i++)
                     {
                         requestWords += $"{words[i].Item1} ";
-                        requestLine += $"{words[i].Item1} from {words[i].Item2}<br>";
+                        requestLine += $"{words[i].Item1} from {words[i].Item2}\n";
                     }
                     
-                    await context.Response.WriteAsync($"{requestWords}.<br>{requestLine}<br>For:{timeItTook.Milliseconds}ms");
+                    await context.Response.WriteAsync($"{requestWords}.\n{requestLine}\nFor:{timeItTook.Milliseconds}ms.\n");
                 });
                 endpoints.MapGet("/tests", async context =>
                 {
                     FLAG = !FLAG;
+                    if (FLAG){
+                        request = new AsyncRequest();
+                    } else {
+                        request = new SyncRequest();
+                    } 
                     if (FLAG){
                         await context.Response.WriteAsync("Async enable.");
                     } else {
